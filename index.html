@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vales de aceituna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="barra">
+    <h1>Vales de aceituna</h1>
+    <nav class="pestanas" aria-label="Secciones">
+      <a href="#registrar" data-vista="registrar">Registrar vale</a>
+      <a href="#registros" data-vista="registros">Registros</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ REGISTRAR ============ -->
+    <section id="vista-registrar" class="vista" hidden>
+      <div class="mesa">
+        <div class="vale">
+          <h2>Foto del vale</h2>
+          <label class="zona-foto" id="zonaFoto">
+            <input type="file" id="inputFoto" accept="image/jpeg,image/png,image/webp" capture="environment" hidden>
+            <img id="previaFoto" alt="Foto del vale" hidden>
+            <span id="textoFoto">Toca para hacer una foto o elegir una imagen del vale</span>
+          </label>
+          <div class="acciones">
+            <button type="button" id="btnLeer" class="primario" disabled>Leer vale con IA</button>
+            <button type="button" id="btnManual" class="enlace">Rellenar a mano</button>
+          </div>
+          <p id="estadoLectura" class="estado" role="status"></p>
+        </div>
+
+        <form id="formVale" class="datos" hidden novalidate>
+          <h2>Datos del vale</h2>
+          <p class="ayuda" id="ayudaForm">Comprueba cada dato con la foto antes de guardar.</p>
+          <input type="hidden" name="imagen">
+
+          <div class="fila">
+            <label>Fecha <input type="date" name="fecha" required></label>
+            <label>Nº de vale <input type="text" name="numero_vale" autocomplete="off"></label>
+          </div>
+          <label>Propietario <input type="text" name="propietario" list="listaPropietarios" required autocomplete="off"></label>
+          <label>Parcela <input type="text" name="parcela" list="listaParcelas" required autocomplete="off"></label>
+          <div class="fila">
+            <label>Kg netos <input type="number" name="kg" step="0.01" min="0" inputmode="decimal" required></label>
+            <label>Rendimiento (%) <input type="number" name="rendimiento" step="0.01" min="0" inputmode="decimal"></label>
+          </div>
+          <label>Variedad <input type="text" name="variedad" autocomplete="off"></label>
+          <label>Observaciones <textarea name="observaciones" rows="2"></textarea></label>
+
+          <div class="acciones">
+            <button type="submit" class="primario">Guardar vale</button>
+            <button type="button" id="btnDescartar" class="enlace">Descartar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ REGISTROS ============ -->
+    <section id="vista-registros" class="vista" hidden>
+      <form id="filtros" class="filtros">
+        <label>Parcela <select name="parcela"><option value="">Todas</option></select></label>
+        <label>Propietario <select name="propietario"><option value="">Todos</option></select></label>
+        <label>Desde <input type="date" name="desde"></label>
+        <label>Hasta <input type="date" name="hasta"></label>
+        <label>Kg mínimos <input type="number" name="kg_min" min="0" step="any" inputmode="decimal"></label>
+        <label>Kg máximos <input type="number" name="kg_max" min="0" step="any" inputmode="decimal"></label>
+        <label class="ancho">Buscar <input type="search" name="q" placeholder="Nº de vale, variedad, observaciones"></label>
+        <button type="reset" class="enlace" id="btnLimpiar">Quitar filtros</button>
+      </form>
+
+      <div class="resumen" id="resumen"></div>
+
+      <div class="desgloses">
+        <div><h3>Por parcela</h3><ul class="barras" id="porParcela"></ul></div>
+        <div><h3>Por propietario</h3><ul class="barras" id="porPropietario"></ul></div>
+      </div>
+
+      <div class="tabla-envoltorio">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Vale</th><th>Parcela</th><th>Propietario</th><th>Variedad</th>
+              <th class="num">Kg</th><th class="num">Rend. %</th><th><span class="solo-lector">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody id="filas"></tbody>
+        </table>
+      </div>
+      <p id="sinResultados" class="vacio" hidden>No hay vales con estos filtros. Quita alguno o registra un vale nuevo.</p>
+    </section>
+  </main>
+
+  <datalist id="listaParcelas"></datalist>
+  <datalist id="listaPropietarios"></datalist>
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
