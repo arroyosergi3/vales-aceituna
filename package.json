@@ -1,7 +1,7 @@
 {
   "name": "vales-aceituna",
-  "version": "1.0.0",
-  "description": "Registro de vales de aceituna con lectura de foto por IA",
+  "version": "1.1.0",
+  "description": "Registro de vales de aceituna con lectura de foto por IA (Node + PostgreSQL)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,10 +9,10 @@
   },
   "engines": { "node": ">=20" },
   "dependencies": {
-    "better-sqlite3": "^11.5.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "multer": "^2.0.2",
-    "openai": "^4.77.0"
+    "openai": "^4.77.0",
+    "pg": "^8.13.0"
   }
 }
