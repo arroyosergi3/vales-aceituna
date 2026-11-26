@@ -34,47 +34,11 @@ async function transaccion(fn) {
   }
 }
 
-// Crea las tablas la primera vez que arranca
+// Crea las tablas la primera vez que arranca (y migra el esquema antiguo si existe)
 async function init() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS propietarios (
-      id     SERIAL PRIMARY KEY,
-      nombre TEXT NOT NULL
-    );
-    CREATE UNIQUE INDEX IF NOT EXISTS ux_propietarios_nombre ON propietarios (lower(nombre));
-
-    CREATE TABLE IF NOT EXISTS parcelas (
-      id     SERIAL PRIMARY KEY,
-      nombre TEXT NOT NULL
-    );
-    CREATE UNIQUE INDEX IF NOT EXISTS ux_parcelas_nombre ON parcelas (lower(nombre));
-
-    -- Las fotos van en la base de datos: el disco del hosting gratuito no es permanente
-    CREATE TABLE IF NOT EXISTS imagenes (
-      id        SERIAL PRIMARY KEY,
-      mime      TEXT  NOT NULL,
-      datos     BYTEA NOT NULL,
-      creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-
-    CREATE TABLE IF NOT EXISTS vales (
-      id             SERIAL PRIMARY KEY,
-      numero_vale    TEXT,
-      fecha          DATE          NOT NULL,
-      kg             NUMERIC(12,2) NOT NULL CHECK (kg > 0),
-      parcela_id     INTEGER       NOT NULL REFERENCES parcelas(id),
-      propietario_id INTEGER       NOT NULL REFERENCES propietarios(id),
-      variedad       TEXT,
-      rendimiento    NUMERIC(5,2),                 -- % de rendimiento graso, si el vale lo trae
-      observaciones  TEXT,
-      imagen_id      INTEGER REFERENCES imagenes(id) ON DELETE SET NULL,
-      creado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_vales_fecha       ON vales(fecha);
-    CREATE INDEX IF NOT EXISTS idx_vales_parcela     ON vales(parcela_id);
-    CREATE INDEX IF NOT EXISTS idx_vales_propietario ON vales(propietario_id);
-  `);
+  await transaccion(async (cliente) => {
+    for (const sentencia of require('./esquema')) await cliente.query(sentencia);
+  });
 }
 
 module.exports = { query, transaccion, init };

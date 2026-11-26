@@ -104,8 +104,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .desgloses { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-bottom: 2rem; }
 .barras { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
 .barras li { display: grid; grid-template-columns: minmax(90px, 1fr) 2fr auto; gap: .75rem; align-items: center; font-size: .92rem; }
-.barras .pista { height: 10px; background: var(--oliva-claro); border-radius: 3px; overflow: hidden; }
-.barras .pista i { display: block; height: 100%; background: var(--oliva); }
+.barras .pista-barra { height: 10px; background: var(--oliva-claro); border-radius: 3px; overflow: hidden; }
+.barras .pista-barra i { display: block; height: 100%; background: var(--oliva); }
 .barras button { all: unset; cursor: pointer; text-decoration: underline; text-decoration-color: var(--borde); text-underline-offset: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .barras button:hover { text-decoration-color: var(--oliva); }
 .barras button:focus-visible { outline: 3px solid var(--aceite); }
@@ -130,3 +130,40 @@ td .acc .borrar { color: var(--error); }
 }
 .aviso.error { background: var(--error); }
 .aviso[hidden] { display: none; }
+
+/* ---------- ampliaciones: sesión, fincas, usuarios ---------- */
+[hidden] { display: none !important; }
+
+.dudoso input, .dudoso select { border-color: var(--aceite); background: #fff8ea; }
+select { appearance: auto; }
+
+.login { min-height: 100vh; display: grid; place-items: center; padding: 1rem; }
+.login-caja { width: min(380px, 100%); display: grid; gap: .9rem; }
+.login-caja h1 { font-size: 1.6rem; color: var(--oliva-oscuro); }
+.login-caja .ayuda { margin: 0; }
+.login-caja .estado { margin: 0; }
+
+.sesion { display: flex; align-items: center; gap: .5rem; color: #dfe8c9; margin-left: auto; }
+.enlace-claro { background: none; border: 0; color: #dfe8c9; text-decoration: underline; padding: .4rem; }
+.enlace-claro:hover { color: #fff; }
+.enlace-claro:focus-visible { outline: 3px solid #f0c969; }
+
+.cabecera-vista { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.cabecera-vista h2 { margin: 0; }
+
+.banner { padding: .75rem 1rem; margin: 0 0 1.5rem; background: #fff8ea; border: 1px solid #e8d3a3; border-radius: var(--radio); }
+.banner a { color: var(--oliva-oscuro); font-weight: 600; }
+.pista { display: block; margin-top: .25rem; font-size: .85rem; color: var(--tinta-suave); }
+.pista:empty { display: none; }
+
+.etiqueta { display: inline-block; padding: .1rem .55rem; border-radius: 99px; font-size: .8rem; background: var(--oliva-claro); color: var(--oliva-oscuro); }
+.etiqueta.apagada { background: #eceee4; color: var(--tinta-suave); }
+
+label.casilla { display: flex; align-items: center; gap: .5rem; color: var(--tinta); }
+label.casilla input { width: auto; margin: 0; }
+
+dialog { border: 1px solid var(--borde); border-radius: var(--radio); padding: 1.5rem; width: min(520px, 92vw); color: var(--tinta); background: var(--papel); }
+dialog::backdrop { background: rgba(31, 42, 29, .45); }
+dialog form { display: grid; gap: .9rem; }
+dialog h2 { margin: 0; }
+dialog .estado { margin: 0; }
