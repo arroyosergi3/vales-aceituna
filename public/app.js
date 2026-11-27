@@ -8,6 +8,7 @@ const escapar = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;
 const sinAcentos = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const celda = (v) => escapar(v) || '—';
 const numeroOGuion = (v) => (v == null ? '—' : fmt.format(v));
+const ico = (nombre) => `<svg class="icono" aria-hidden="true"><use href="#i-${nombre}"/></svg>`;
 
 let usuario = null; // sesión actual
 let fincas = [];    // fincas que puede ver el usuario
@@ -46,7 +47,7 @@ function mostrarLogin() {
   usuario = null;
   $('#app').hidden = true;
   $('#pantallaLogin').hidden = false;
-  $('#formLogin').elements.email.focus();
+  cambiarModo(false);
 }
 
 async function entrar() {
@@ -59,6 +60,32 @@ async function entrar() {
   mostrarVista();
 }
 
+let config = { registro: false, requiereCodigo: false };
+
+async function cargarConfig() {
+  try {
+    config = await api('/api/auth/config');
+  } catch {
+    /* si falla, se muestra solo "Entrar" */
+  }
+  $('.selector').hidden = !config.registro;
+  $('#campoCodigo').hidden = !config.requiereCodigo;
+  $('#formRegistro').elements.codigo.required = config.requiereCodigo;
+}
+
+// Alterna entre "Entrar" y "Crear cuenta"
+function cambiarModo(registro) {
+  $('#formLogin').hidden = registro;
+  $('#formRegistro').hidden = !registro;
+  $('#modoEntrar').setAttribute('aria-pressed', String(!registro));
+  $('#modoRegistro').setAttribute('aria-pressed', String(registro));
+  $('#errorLogin').textContent = '';
+  $('#errorRegistro').textContent = '';
+  (registro ? $('#formRegistro').elements.nombre : $('#formLogin').elements.email).focus();
+}
+$('#modoEntrar').addEventListener('click', () => cambiarModo(false));
+$('#modoRegistro').addEventListener('click', () => cambiarModo(true));
+
 $('#formLogin').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const f = ev.target;
@@ -69,6 +96,27 @@ $('#formLogin').addEventListener('submit', async (ev) => {
     await entrar();
   } catch (e) {
     $('#errorLogin').textContent = e.message;
+  }
+});
+
+$('#formRegistro').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const f = ev.target;
+  $('#errorRegistro').textContent = '';
+  if (!f.reportValidity()) return;
+  if (f.password.value !== f.repetir.value) {
+    $('#errorRegistro').textContent = 'Las contraseñas no coinciden';
+    return;
+  }
+  try {
+    usuario = await api('/api/auth/registro', enviarJSON('POST', {
+      nombre: f.nombre.value, email: f.email.value, password: f.password.value, codigo: f.codigo.value,
+    }));
+    f.reset();
+    await entrar();
+    avisar(`Cuenta creada. Bienvenido, ${usuario.nombre}`);
+  } catch (e) {
+    $('#errorRegistro').textContent = e.message;
   }
 });
 
@@ -292,8 +340,8 @@ async function cargarRegistros() {
         <td class="num">${fmt.format(v.kg)}</td>
         <td class="num">${numeroOGuion(v.rendimiento)}</td>
         <td><div class="acc">
-          ${v.tiene_imagen ? `<a href="/api/vales/${v.id}/imagen" target="_blank" rel="noopener">Ver foto</a>` : ''}
-          <button type="button" class="borrar" data-id="${v.id}" data-desc="${escapar(`${fmtFecha(v.fecha)} · ${v.finca} · ${fmt.format(v.kg)} kg`)}">Borrar</button>
+          ${v.tiene_imagen ? `<a class="boton pequeno" href="/api/vales/${v.id}/imagen" target="_blank" rel="noopener">${ico('imagen')} Ver foto</a>` : ''}
+          <button type="button" class="boton pequeno peligro borrar" data-id="${v.id}" data-desc="${escapar(`${fmtFecha(v.fecha)} · ${v.finca} · ${fmt.format(v.kg)} kg`)}">${ico('papelera')} Borrar</button>
         </div></td>
       </tr>`).join('');
     $('#sinResultados').hidden = vales.length > 0;
@@ -307,7 +355,7 @@ function pintarBarras(selector, filas, campo) {
   const max = Math.max(...filas.map((f) => f.kg), 1);
   $(selector).innerHTML = filas.map((f) => `
     <li>
-      <button type="button" data-campo="${campo}" data-valor="${f.id}" title="Filtrar por ${escapar(f.nombre)}">${escapar(f.nombre)}</button>
+      <button type="button" class="filtro-barra" data-campo="${campo}" data-valor="${f.id}" title="Filtrar por ${escapar(f.nombre)}">${ico('filtro')}<span>${escapar(f.nombre)}</span></button>
       <span class="pista-barra"><i style="width:${(f.kg / max) * 100}%"></i></span>
       <span>${fmt.format(f.kg)} kg</span>
     </li>`).join('');
@@ -363,8 +411,8 @@ async function pintarFincas() {
       ${esAdmin() ? `<td>${escapar(f.usuario)}</td>` : ''}
       <td class="num">${fmt.format(f.kg)}</td>
       <td><div class="acc">
-        <button type="button" data-accion="editar" data-id="${f.id}">Editar</button>
-        <button type="button" class="borrar" data-accion="borrar" data-id="${f.id}">Borrar</button>
+        <button type="button" class="boton pequeno" data-accion="editar" data-id="${f.id}">${ico('lapiz')} Editar</button>
+        <button type="button" class="boton pequeno peligro borrar" data-accion="borrar" data-id="${f.id}">${ico('papelera')} Borrar</button>
       </div></td>
     </tr>`).join('');
   $('#sinFincas').hidden = fincas.length > 0;
@@ -442,7 +490,7 @@ async function cargarUsuarios(pintar = true) {
         <td>${u.rol === 'admin' ? 'Administrador' : 'Usuario'}</td>
         <td><span class="etiqueta ${u.activo ? '' : 'apagada'}">${u.activo ? 'Activo' : 'Desactivado'}</span></td>
         <td class="num">${u.fincas}</td>
-        <td><div class="acc"><button type="button" data-id="${u.id}">Editar</button></div></td>
+        <td><div class="acc"><button type="button" class="boton pequeno" data-id="${u.id}">${ico('lapiz')} Editar</button></div></td>
       </tr>`).join('');
   }
   return usuarios;
@@ -494,6 +542,7 @@ $('#formUsuario').addEventListener('submit', async (ev) => {
 
 /* ---------- arranque ---------- */
 (async () => {
+  await cargarConfig();
   try {
     usuario = await api('/api/auth/yo');
     await entrar();

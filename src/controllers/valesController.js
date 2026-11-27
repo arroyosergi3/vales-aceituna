@@ -1,6 +1,7 @@
 const db = require('../db');
 const { extraerDatosVale } = require('../services/extraccionIA');
 const { fincaAccesible } = require('./fincasController');
+const auth = require('../auth');
 
 const MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -25,6 +26,8 @@ exports.extraer = async (req, res, next) => {
   try {
     if (!req.file) throw error('Falta la imagen del vale');
     if (!MIMES.has(req.file.mimetype)) throw error('Formato no admitido. Usa JPG, PNG o WEBP');
+    auth.limites.lecturas.comprobar(req.usuario.id); // protege el cupo gratuito de la IA
+    auth.limites.lecturas.anotar(req.usuario.id);
     const datos = await extraerDatosVale(req.file.buffer, req.file.mimetype);
     res.json({ datos });
   } catch (e) {

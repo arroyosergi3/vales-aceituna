@@ -12,6 +12,8 @@ const subida = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 // Públicas
 router.post('/auth/login', sesion.login);
 router.post('/auth/logout', sesion.logout);
+router.get('/auth/config', sesion.config);
+router.post('/auth/registro', sesion.registro);
 
 // A partir de aquí hace falta haber entrado
 router.use(auth.requiereSesion);

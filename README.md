@@ -4,7 +4,7 @@ Web para registrar vales de aceituna a partir de una foto. Cada usuario tiene su
 
 ## Cómo funciona
 
-- **Usuarios.** Se entra con email y contraseña. Hay dos roles: *usuario* (ve y gestiona solo sus fincas y vales) y *administrador* (lo ve todo, crea usuarios y puede asignar fincas a cualquiera). No hay registro público: el administrador crea las cuentas.
+- **Usuarios.** Se entra con email y contraseña. Hay dos roles: *usuario* (ve y gestiona solo sus fincas y vales) y *administrador* (lo ve todo, crea usuarios y puede asignar fincas a cualquiera). Cualquiera puede crear su cuenta desde «Crear cuenta» (siempre con rol *usuario*); se puede cerrar con `REGISTRO_ABIERTO=false` o exigir un código con `REGISTRO_CODIGO`. El administrador también puede crear cuentas.
 - **Fincas.** CRUD completo. Datos: nombre, alias, superficie (ha), polígono, parcela, nº de olivos, variedad y usuario. Una finca con vales no se puede borrar.
 - **Vales.** Foto → IA → formulario de revisión → guardar. La finca la elige siempre el usuario. Si la IA lee una parcela que coincide con una sola finca (por nombre, alias o nº de parcela), la propone.
 - **Primer administrador.** Al arrancar sin usuarios, se crea con `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
@@ -24,6 +24,8 @@ Ver `.env.example`. En Render se ponen en **Environment**; nunca se suben al rep
 | `SESSION_SECRET` | Firma de las sesiones (mínimo 32 caracteres) |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Primer administrador (solo si no hay usuarios) |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-2.5-flash` |
+| `REGISTRO_ABIERTO` | `false` desactiva «Crear cuenta» (por defecto está abierto) |
+| `REGISTRO_CODIGO` | Opcional. Código de invitación necesario para crear una cuenta |
 
 ## Puesta en marcha en local
 
@@ -58,6 +60,6 @@ Todas las rutas, salvo el login, exigen sesión.
 
 ## Seguridad
 
-- Contraseñas con scrypt y sesión en cookie firmada (HttpOnly, SameSite=Lax y Secure en producción). Máximo 10 intentos fallidos de login cada 15 minutos.
+- Contraseñas con scrypt y sesión en cookie firmada (HttpOnly, SameSite=Lax y Secure en producción). Máximo 10 intentos fallidos de login cada 15 minutos, 5 registros por hora y conexión, y 30 lecturas con IA por hora y usuario.
 - Cada consulta se limita a las fincas del usuario; un usuario no puede ver ni tocar datos de otro.
 - Revisa siempre los datos antes de guardar: una IA puede equivocarse con letra manuscrita o fotos movidas.

@@ -75,23 +75,38 @@ async function requiereSesion(req, res, next) {
 
 const soloAdmin = (req, res, next) => (req.usuario.rol === 'admin' ? next() : next(error('No tienes permiso para hacer esto', 403)));
 
-/* ---------- límite de intentos de login (en memoria) ---------- */
-const intentos = new Map();
-const VENTANA_MS = 15 * 60 * 1000;
-const MAX_INTENTOS = 10;
+/* ---------- límites de uso (en memoria) ---------- */
+function crearLimitador(max, ventanaMs, mensaje) {
+  const registros = new Map();
+  return {
+    comprobar(clave) {
+      const r = registros.get(clave);
+      if (r && r.hasta > Date.now() && r.n >= max) throw error(mensaje, 429);
+    },
+    anotar(clave) {
+      const ahora = Date.now();
+      if (registros.size > 1000) for (const [k, v] of registros) if (v.hasta <= ahora) registros.delete(k);
+      const r = registros.get(clave);
+      if (!r || r.hasta <= ahora) registros.set(clave, { n: 1, hasta: ahora + ventanaMs });
+      else r.n += 1;
+    },
+    limpiar(clave) {
+      registros.delete(clave);
+    },
+  };
+}
 
-function comprobarLimite(clave) {
-  const r = intentos.get(clave);
-  if (r && r.hasta > Date.now() && r.n >= MAX_INTENTOS) throw error('Demasiados intentos. Espera unos minutos y vuelve a probar', 429);
-}
-function anotarFallo(clave) {
-  const ahora = Date.now();
-  if (intentos.size > 1000) for (const [k, v] of intentos) if (v.hasta <= ahora) intentos.delete(k);
-  const r = intentos.get(clave);
-  if (!r || r.hasta <= ahora) intentos.set(clave, { n: 1, hasta: ahora + VENTANA_MS });
-  else r.n += 1;
-}
-const limpiarFallos = (clave) => intentos.delete(clave);
+const limites = {
+  login: crearLimitador(10, 15 * 60 * 1000, 'Demasiados intentos. Espera unos minutos y vuelve a probar'),
+  registro: crearLimitador(5, 60 * 60 * 1000, 'Demasiados registros desde tu conexión. Inténtalo más tarde'),
+  lecturas: crearLimitador(30, 60 * 60 * 1000, 'Has leído muchos vales seguidos. Espera un rato o rellénalos a mano'),
+};
+
+// Comparación de textos secretos sin filtrar información por el tiempo que tarda
+const igualSeguro = (a, b) => {
+  const hash = (x) => crypto.createHash('sha256').update(String(x ?? '')).digest();
+  return crypto.timingSafeEqual(hash(a), hash(b));
+};
 
 /* ---------- primer administrador ---------- */
 // Si no hay ningún usuario, se crea el administrador con ADMIN_EMAIL y ADMIN_PASSWORD.
@@ -112,5 +127,5 @@ async function asegurarAdmin() {
 
 module.exports = {
   hashPassword, verificarPassword, crearToken, leerToken, ponerCookie, quitarCookie,
-  requiereSesion, soloAdmin, comprobarLimite, anotarFallo, limpiarFallos, asegurarAdmin,
+  requiereSesion, soloAdmin, limites, igualSeguro, asegurarAdmin,
 };
